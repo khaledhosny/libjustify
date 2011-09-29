@@ -638,10 +638,10 @@ main (int argc, char **argv)
 {
 #if 1
   char *font_name = "Times-Roman";
-  char *afm_fn = "/usr/lib/texmf/texmf/fonts/afm/adobe/times/ptmr8a.afm";
+  char *afm_fn = "ptmr8a.afm";
 #else
   char *font_name = "Helvetica";
-  char *afm_fn = "/usr/lib/texmf/texmf/fonts/afm/adobe/helvetic/phvr8a.afm";
+  char *afm_fn = "phvr8a.afm";
 #endif
   PSOContext pso;
 
