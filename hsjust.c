@@ -42,7 +42,7 @@
    */
 
 int
-hnj_hs_just (const HnjBreak *breaks, int n_breaks,
+hnj_hs_just (HnjBreak *breaks, int n_breaks,
 	     const HnjParams *params, int *result)
 {
   int set_width = params->set_width;

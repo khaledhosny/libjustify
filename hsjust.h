@@ -43,7 +43,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 /* Return value is number of breaks in result. */
-int hnj_hs_just (const HnjBreak *breaks, int n_breaks,
+int hnj_hs_just (HnjBreak *breaks, int n_breaks,
 		 const HnjParams *params, int *result);
 
 #ifdef __cplusplus
