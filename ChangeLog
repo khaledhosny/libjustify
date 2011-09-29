@@ -1,0 +1,62 @@
+1999-02-13  Chris Lahey  <clahey@umich.edu>
+
+	* configure.in: Bumped the version number to 0.1.1.
+
+1999-02-11  Chris Lahey  <clahey@umich.edu>
+
+	* hsjust.c (hnj_hs_just): Fixed it up a bit so that the breaks are
+	guaranteed to have x0s in strictly increasing order.  If any out of
+	order breaks are found, the earlier one has its penalty increased
+	sharply.
+
+1999-02-05  Chris Lahey  <clahey@umich.edu>
+
+	* .cvsignore: Added libhnj-config and libhnj.spec.
+
+	* libhnj.m4, libhnj-config.in: Added these to CVS.  They allow
+ 	applications to find libhnj, no matter where it gets installed.
+
+	* Makefile.am: Added libhnj.m4, libhnj-config, and libhnj.spec.
+
+	* configure.in: Added creation of libhnj-config and libhnj.spec.
+	Changed it so that the version number is computed from major,
+	minor, and micro version numbers.
+
+	* libhnj.spec.in: Added this to CVS.  The version number gets
+ 	automatically generated.
+
+	* Makefile.am: Added libhnj.spec.
+
+1999-02-01  Chris Lahey  <clahey@umich.edu>
+
+	* configure.in: Fixed the name of the module in configure.in.
+	Bumped version number to 0.1.0.
+
+Sun Jan 24 00:20:40 1999  Raph Levien  <raph@gimp.org>
+
+	* hqjust.c (hnj_hq_just): Changed the max_neg_space mechanism to
+	use a fraction of total_space, rather than per-space amount. Fixed
+	some subtle bugs in the max_neg_space handling.
+
+	* hsjust.c (hnj_hs_just): Changed the max_neg_space mechanism to
+	be a fraction of total_space, rather than a per-space amount.
+	Also fixed the space in the case where there's a tab in the middle
+	of the line.
+
+	* psset.c: use a more reasonable value for max_neg_space.
+
+1999-01-03  Chris Lahey  <clahey@umich.edu>
+
+	* hsjust.c (hnj_hs_just): Added code to make sure that tabs at the
+	beginning of the line work.
+
+1999-01-03  Chris Lahey  <clahey@umich.edu>
+
+	* just.h, hsjust.c (hnj_hs_just): Added tabbing to the algorithm
+	in hsjust.c.  Tabs should be 0 width breaks (x0 = x1) with flags =
+	HNJ_JUST_FLAG_ISTAB.  params.tab_width should also be set unless
+	you want 1 unit tabs.
+
+Tue Sep  8 13:23:58 1998  Raph Levien  <raph@acm.org>
+
+	* Initial checkin to CVS.
