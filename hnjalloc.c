@@ -52,18 +52,6 @@ hnj_malloc (int size)
   return p;
 }
 
-void *
-hnj_realloc (void *p, int size)
-{
-  p = realloc (p, size);
-  if (p == NULL)
-    {
-      fprintf (stderr, "can't allocate %d bytes\n", size);
-      exit (1);
-    }
-  return p;
-}
-
 void
 hnj_free (void *p)
 {

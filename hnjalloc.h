@@ -38,9 +38,6 @@
 void *
 hnj_malloc (int size);
 
-void *
-hnj_realloc (void *p, int size);
-
 void
 hnj_free (void *p);
 
