@@ -1,6 +1,6 @@
 dnl Initialize the autoconf settings
 
-AC_INIT(hyphen.h)
+AC_INIT
 
 LIBHNJ_MAJOR_VERSION=0
 LIBHNJ_MINOR_VERSION=1
@@ -26,6 +26,8 @@ AM_CONFIG_HEADER(config.h)
 AC_PROG_CC
 AC_PROG_CPP
 AM_PROG_LIBTOOL
+
+AC_CHECK_HEADER(hyphen.h, [], [ AC_MSG_ERROR(libhyphen headers not found.)], [])
 
 AM_MAINTAINER_MODE
 

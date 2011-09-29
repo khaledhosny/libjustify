@@ -5,7 +5,6 @@ noinst_PROGRAMS = psset
 lib_LTLIBRARIES = libhnj.la
 
 libhnj_la_SOURCES = \
-	hyphen.c \
 	hsjust.c \
 	hqjust.c \
 	hnjalloc.c \
@@ -18,7 +17,6 @@ libhnj_la_SOURCES = \
 
 libhnjincdir = $(includedir)/libhnj
 libhnjinc_HEADERS = \
-	hyphen.h \
 	just.h \
 	hsjust.h \
 	hqjust.h
@@ -32,7 +30,8 @@ psset_SOURCES=psset.c
 psset_LDFLAGS = 
 psset_DEPENDENCIES = $(DEPS)
 psset_LDADD= $(LDADDS) \
-	     -lm
+	     -lm \
+	     -lhyphen
 
 tests: psset
 

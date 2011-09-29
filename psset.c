@@ -41,7 +41,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
-#include "hyphen.h"
+#include <hyphen.h>
 #include "hsjust.h"
 #include "hqjust.h"
 #include "hnjalloc.h"
