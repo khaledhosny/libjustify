@@ -23,7 +23,7 @@ libhnjinc_HEADERS = \
 	hsjust.h \
 	hqjust.h
 
-EXTRA_DIST = hyphen.mashed README.hyphen libhnj.spec libhnj.m4
+EXTRA_DIST = hyphen.mashed README.hyphen libhnj.m4
 
 DEPS = $(top_builddir)/libhnj.la
 LDADDS = $(top_builddir)/libhnj.la

@@ -30,5 +30,4 @@ AM_PROG_LIBTOOL
 AM_MAINTAINER_MODE
 
 AC_OUTPUT([Makefile
-libhnj-config
-libhnj.spec])
+libhnj-config])
