@@ -497,10 +497,12 @@ hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
 #endif
   n_breaks = 0;
   x = 0;
+
   for (i = 0; i < n_words; i++)
     {
       l = strlen (words[i]);
-      hnj_hyphen_hyphenate (dict, words[i], l, hbuf);
+      if (dict)
+        hnj_hyphen_hyphenate (dict, words[i], l, hbuf);
 #ifdef SAVE_KERN
       word_k[i] = k_idx;
 #endif
@@ -510,7 +512,7 @@ hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
 	  putchar (words[i][j]);
 #endif
 	  x += widths[words[i][j]];
-	  if (hbuf[j] & 1)
+	  if (dict && hbuf[j] & 1)
 	    {
 #ifdef PRINT_HYPHENS
 	      putchar ('-');
