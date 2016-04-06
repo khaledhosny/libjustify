@@ -1,12 +1,12 @@
 ACLOCAL_AMFLAGS = -I m4
 
-bin_SCRIPTS = libhnj-config
+bin_SCRIPTS = libjustify-config
 
 noinst_PROGRAMS = psset
 
-lib_LTLIBRARIES = libhnj.la
+lib_LTLIBRARIES = libjustify.la
 
-libhnj_la_SOURCES = \
+libjustify_la_SOURCES = \
 	hsjust.c \
 	hqjust.c \
 	hnjalloc.c \
@@ -17,16 +17,16 @@ libhnj_la_SOURCES = \
 	parseAFM.h \
 	z_misc.h
 
-libhnjincdir = $(includedir)/libhnj
-libhnjinc_HEADERS = \
+libjustifyincdir = $(includedir)/libjustify
+libjustifyinc_HEADERS = \
 	just.h \
 	hsjust.h \
 	hqjust.h
 
-EXTRA_DIST = hyphen.mashed README.hyphen libhnj.m4
+EXTRA_DIST = hyphen.mashed README.hyphen libjustify.m4
 
-DEPS = $(top_builddir)/libhnj.la
-LDADDS = $(top_builddir)/libhnj.la
+DEPS = $(top_builddir)/libjustify.la
+LDADDS = $(top_builddir)/libjustify.la
 
 psset_SOURCES=psset.c
 psset_LDFLAGS = 
@@ -38,4 +38,4 @@ psset_LDADD= $(LDADDS) \
 tests: psset
 
 m4datadir = $(datadir)/aclocal
-m4data_DATA = libhnj.m4
+m4data_DATA = libjustify.m4

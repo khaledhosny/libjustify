@@ -15,7 +15,7 @@ m4_define(libjustify_micro_version,m4_argn(3,libjustify_version_triplet))
 LIBJUSTIFY_MAJOR_VERSION=libjustify_major_version
 LIBJUSTIFY_MINOR_VERSION=libjustify_minor_version
 LIBJUSTIFY_MICRO_VERSION=libjustify_micro_version
-LIBJUSTIFY_VERSION=AC_PACKAGE_VERSION 
+LIBJUSTIFY_VERSION=AC_PACKAGE_VERSION
 
 AC_SUBST(LIBJUSTIFY_MAJOR_VERSION)
 AC_SUBST(LIBJUSTIFY_MINOR_VERSION)
@@ -33,4 +33,4 @@ AM_PROG_LIBTOOL
 AC_CHECK_HEADER(hyphen.h, [], [ AC_MSG_ERROR(libhyphen headers not found.)], [])
 
 AC_OUTPUT([Makefile
-libhnj-config])
+libjustify-config])
