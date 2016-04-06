@@ -1,35 +1,36 @@
 dnl Initialize the autoconf settings
 
-AC_INIT
-
-LIBHNJ_MAJOR_VERSION=0
-LIBHNJ_MINOR_VERSION=1
-LIBHNJ_MICRO_VERSION=1
-LIBHNJ_VERSION=$LIBHNJ_MAJOR_VERSION.$LIBHNJ_MINOR_VERSION.$LIBHNJ_MICRO_VERSION
+AC_INIT([libjustify], [0.1.1])
+AM_INIT_AUTOMAKE
+AM_SILENT_RULES([yes])
 
 dnl set version info for libhnj.so to package rev - $MAJOR + $MINOR : $MICRO : $MINOR
-LIBHNJ_VERSION_INFO=1:1:0
+LIBJUSTIFY_VERSION_INFO=1:1:0
 
-AC_SUBST(LIBHNJ_MAJOR_VERSION)
-AC_SUBST(LIBHNJ_MINOR_VERSION)
-AC_SUBST(LIBHNJ_MICRO_VERSION)
-AC_SUBST(LIBHNJ_VERSION)
-AC_SUBST(LIBHNJ_VERSION_INFO)
+# Version
+m4_define(libjustify_version_triplet,m4_split(AC_PACKAGE_VERSION,[[.]]))
+m4_define(libjustify_major_version,m4_argn(1,libjustify_version_triplet))
+m4_define(libjustify_minor_version,m4_argn(2,libjustify_version_triplet))
+m4_define(libjustify_micro_version,m4_argn(3,libjustify_version_triplet))
+LIBJUSTIFY_MAJOR_VERSION=libjustify_major_version
+LIBJUSTIFY_MINOR_VERSION=libjustify_minor_version
+LIBJUSTIFY_MICRO_VERSION=libjustify_micro_version
+LIBJUSTIFY_VERSION=AC_PACKAGE_VERSION 
 
-VERSION=$LIBHNJ_VERSION
-PACKAGE=libhnj
-
-AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
+AC_SUBST(LIBJUSTIFY_MAJOR_VERSION)
+AC_SUBST(LIBJUSTIFY_MINOR_VERSION)
+AC_SUBST(LIBJUSTIFY_MICRO_VERSION)
+AC_SUBST(LIBJUSTIFY_VERSION)
+AC_SUBST(LIBJUSTIFY_VERSION_INFO)
 
 AM_CONFIG_HEADER(config.h)
+AC_CONFIG_MACRO_DIRS([m4])
 
 AC_PROG_CC
 AC_PROG_CPP
 AM_PROG_LIBTOOL
 
 AC_CHECK_HEADER(hyphen.h, [], [ AC_MSG_ERROR(libhyphen headers not found.)], [])
-
-AM_MAINTAINER_MODE
 
 AC_OUTPUT([Makefile
 libhnj-config])
