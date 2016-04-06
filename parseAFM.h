@@ -82,7 +82,6 @@
 #define TRUE 1
 #define FALSE 0
 #define EOL '\n'                /* end-of-line indicator */
-#define MAX_NAME 4096           /* max length for identifiers */
 #define BOOL int
 #define FLAGS int
 

@@ -57,6 +57,7 @@
 #include <math.h>
 #include "parseAFM.h"
  
+#define MAX_NAME 4096   /* max length for identifiers */
 #define lineterm EOL	/* line terminating character */
 #define normalEOF 1	/* return code from parsing routines used only */
 			/* in this module */
@@ -89,7 +90,7 @@ static char *ident = NULL; /* storage buffer for keywords */
  * "recognize" procedure to calculate how many possible keys there are.
  */
 
-static enum parseKey {
+enum parseKey {
   ASCENDER, CHARBBOX, CODE, COMPCHAR, CAPHEIGHT, COMMENT, 
   DESCENDER, ENCODINGSCHEME, ENDCHARMETRICS, ENDCOMPOSITES, 
   ENDFONTMETRICS, ENDKERNDATA, ENDKERNPAIRS, ENDTRACKKERN, 
@@ -495,7 +496,7 @@ static int initializeArray(fp, cwi)
  *  parseFile to determine if there is more file to parse.
  */
  
-static parseCharWidths(fp, cwi)
+static int parseCharWidths(fp, cwi)
   FILE *fp;
   register int *cwi;
 {  
@@ -596,7 +597,7 @@ static parseCharWidths(fp, cwi)
  *  parseFile to determine if there is more file to parse.
  */
  
-static parseCharMetrics(fp, fi)
+static int parseCharMetrics(fp, fi)
   FILE *fp;
   register FontInfo *fi;
 {  
@@ -707,7 +708,7 @@ static parseCharMetrics(fp, fi)
  *  parseFile to determine if there is more file to parse.
  */
  
-static parseTrackKernData(fp, fi)
+static int parseTrackKernData(fp, fi)
   FILE *fp;
   register FontInfo *fi;
 {  
@@ -811,7 +812,7 @@ static parseTrackKernData(fp, fi)
  *  parseFile to determine if there is more file to parse.
  */
  
-static parsePairKernData(fp, fi)
+static int parsePairKernData(fp, fi)
   FILE *fp;
   register FontInfo *fi;
 {  
@@ -937,7 +938,7 @@ static parsePairKernData(fp, fi)
  *  parseFile to determine if there is more file to parse.
  */
  
-static parseCompCharData(fp, fi)
+static int parseCompCharData(fp, fi)
   FILE *fp;
   register FontInfo *fi;
 {  
