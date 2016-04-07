@@ -1,4 +1,4 @@
-LibJustify is a library for high quality justification. It
+LibJustify is a library for high quality justification derived from LibHnj. It
 is dual licensed under both LGPL and MPL to encourage widespread use.
 The parseAFM.[ch] files are written by Adobe and distributed under a
 slightly different license, but one that appears to be compatible with
