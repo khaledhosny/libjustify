@@ -35,5 +35,4 @@ AC_CHECK_HEADER(hyphen.h, [], [ AC_MSG_ERROR(libhyphen headers not found.)], [])
 
 PKG_CHECK_MODULES(FREETYPE, [freetype2])
 
-AC_OUTPUT([Makefile
-libjustify-config])
+AC_OUTPUT([Makefile])

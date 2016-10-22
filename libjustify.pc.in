@@ -1,0 +1,13 @@
+prefix=%prefix%
+exec_prefix=%exec_prefix%
+libdir=%libdir%
+includedir=%includedir%
+
+Name: libjustify
+Description: LibJustify high quality justification library
+Version: %VERSION%
+
+Libs: -L${libdir} -ljustify
+Libs.private: %libs_private%
+Requires.private: %requires_private%
+Cflags: -I${includedir}/libjustify

@@ -1,7 +1,5 @@
 ACLOCAL_AMFLAGS = -I m4
 
-bin_SCRIPTS = libjustify-config
-
 noinst_PROGRAMS = psset
 
 lib_LTLIBRARIES = libjustify.la
@@ -17,7 +15,7 @@ libjustifyinc_HEADERS = \
 	hsjust.h \
 	hqjust.h
 
-EXTRA_DIST = hyphen.mashed README.hyphen libjustify.m4
+EXTRA_DIST = hyphen.mashed README.hyphen
 
 DEPS = $(top_builddir)/libjustify.la
 LDADDS = $(top_builddir)/libjustify.la
@@ -32,7 +30,22 @@ psset_LDADD= $(LDADDS) \
 	     -lhyphen \
 	     $(FREETYPE_LIBS)
 
-tests: psset
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libjustify.pc
+EXTRA_DIST += libjustify.pc.in
 
-m4datadir = $(datadir)/aclocal
-m4data_DATA = libjustify.m4
+%.pc: %.pc.in $(top_builddir)/config.status
+	$(AM_V_GEN) \
+	$(SED)	-e 's@%prefix%@$(prefix)@g' \
+		-e 's@%exec_prefix%@$(exec_prefix)@g' \
+		-e 's@%libdir%@$(libdir)@g' \
+		-e 's@%includedir%@$(includedir)@g' \
+		-e 's@%libs_private%@$(HBNONPCLIBS)@g' \
+		-e 's@%requires_private%@$(HBDEPS)@g' \
+		-e 's@%VERSION%@$(VERSION)@g' \
+	"$<" > "$@" \
+	|| ($(RM) "$@"; false)
+
+CLEANFILES = $(pkgconfig_DATA)
+
+tests: psset
