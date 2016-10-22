@@ -36,6 +36,7 @@
 /* A simple program to do PostScript h&j and setting of vanilla
    plaintext files. */
 
+#define VERBOSE
 
 #include <stdio.h>
 #include <string.h>
@@ -59,7 +60,6 @@ typedef struct _LigList LigList;
 typedef struct _PSOContext PSOContext;
 
 #define SCALE 50
-#define SAVE_KERN
 
 struct _PSContext {
   NameContext *nc; /* the context for all names */
@@ -185,9 +185,6 @@ munch_lig_info (PSContext *psc, MunchedFontInfo *mfi, FontInfo *fi)
 	      ll->succ = succ;
 	      ll->lig = lig;
 	      ll->next = mfi->lig[c];
-#ifdef VERBOSE
-	      printf ("%% lig %c%c -> %c\n", c, succ, lig);
-#endif
 	      mfi->lig[c] = ll;
 	    }
 	}
@@ -237,9 +234,6 @@ munch_font_info (PSContext *psc, FontInfo *fi, double fontsize)
       table[j].name1 = c1;
       table[j].name2 = c2;
       table[j].xamt = floor (fi->pkd[i].xamt * scale + 0.5);
-#ifdef VERBOSE
-      printf ("%% %c%c %d\n", c1, c2, table[j].xamt);
-#endif
     }
 
   return mfi;
@@ -360,52 +354,6 @@ pso_blank_line (PSOContext *pso)
   fprintf (pso->f, "\n");
 }
 
-#ifdef SAVE_KERN
-/* This includes kerning and ligatures! */
-void
-pso_show_word (PSOContext *pso, const char *word, int *kerns, z_boolean space)
-{
-  char new_word[256];
-  int i, j;
-  char c;
-  int kern;
-  MunchedFontInfo *mfi;
-  LigList *lig;
-
-  mfi = pso->font->mfi;
-  j = 0;
-  new_word[j++] = '(';
-  for (i = 0; word[i]; i++)
-    {
-      c = word[i];
-      lig = mfi->lig[(unsigned char)c];
-      while (lig)
-	{
-	  if (lig->succ == word[i + 1])
-	    {
-	      c = lig->lig;
-	      lig = mfi->lig[(unsigned char)c];
-	      /* which is mfi->lig[lig->lig] :) */
-	      i++;
-	    }
-	  else
-	    lig = lig->next;
-	}
-      if (c == '(' || c == ')' || c == '\\')
-	new_word[j++] = '\\';
-      new_word[j++] = c;
-      kern = kerns[i];
-      if (kern)
-	  j += sprintf (new_word + j, ")%d %c(",
-			kern > 0 ? kern : -kern,
-			kern > 0 ? '+' : '-');
-    }
-  new_word[j++] = ')';
-  new_word[j++] = space ? '_' : '|';
-  new_word[j++] = 0;
-  fputs (new_word, pso->f);
-}
-#else
 /* This includes kerning! */
 void
 pso_show_word (PSOContext *pso, const char *word, z_boolean space)
@@ -436,7 +384,6 @@ pso_show_word (PSOContext *pso, const char *word, z_boolean space)
   new_word[j++] = 0;
   fputs (new_word, pso->f);
 }
-#endif
 
 void
 pso_hmoveto (PSOContext *pso, double dx)
@@ -454,8 +401,6 @@ strdup_from_buf (const char *buf, int size)
   new[size] = '\0';
   return new;
 }
-
-#define noPRINT_HYPHENS
 
 void
 hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
@@ -481,20 +426,12 @@ hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
   int width;
   double space;
   MunchedFontInfo *mfi;
-#ifdef SAVE_KERN
-  int save_kern[65536];
-  int word_k[16384];
-  int k_idx;
-#endif
 
   mfi = pso->font->mfi;
   widths = mfi->widths;
   hyphwidth = widths['-'];
   spacewidth = widths[' '];
 
-#ifdef SAVE_KERN
-  k_idx = 0;
-#endif
   n_breaks = 0;
   x = 0;
 
@@ -503,20 +440,11 @@ hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
       l = strlen (words[i]);
       if (dict)
         hnj_hyphen_hyphenate (dict, words[i], l, hbuf);
-#ifdef SAVE_KERN
-      word_k[i] = k_idx;
-#endif
       for (j = 0; j < l; j++)
 	{
-#ifdef PRINT_HYPHENS
-	  putchar (words[i][j]);
-#endif
 	  x += widths[words[i][j]];
 	  if (dict && hbuf[j] & 1)
 	    {
-#ifdef PRINT_HYPHENS
-	      putchar ('-');
-#endif
 	      breaks[n_breaks].x0 = x + hyphwidth;
 	      breaks[n_breaks].x1 = x;
 	      breaks[n_breaks].penalty = 1000000;
@@ -527,20 +455,9 @@ hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
 	    }
 	  if (words[i][j + 1])
 	    {
-#ifdef SAVE_KERN
-	      x += save_kern[k_idx++] =
-		get_kern_pair (mfi, words[i][j], words[i][j + 1]);
-#else
 	      x += get_kern_pair (mfi, words[i][j], words[i][j + 1]);
-#endif
 	    }
 	}
-#ifdef PRINT_HYPHENS
-      putchar (' ');
-#endif
-#ifdef SAVE_KERN
-      save_kern[k_idx++] = 0;
-#endif
       breaks[n_breaks].x0 = x;
       x += spacewidth;
       breaks[n_breaks].x1 = x;
@@ -568,7 +485,7 @@ hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
 
       width = (breaks[break_num].x0 - x) - n_space * spacewidth;
 #ifdef VERBOSE
-      printf ("%% x0 = %d, x1 = %d%s\n", breaks[break_num].x0, breaks[break_num].x1, breaks[break_num].flags & HNJ_JUST_FLAG_ISHYPHEN ? " -" : "");
+      fprintf (stderr, "%% x0 = %d, x1 = %d%s\n", breaks[break_num].x0, breaks[break_num].x1, breaks[break_num].flags & HNJ_JUST_FLAG_ISHYPHEN ? " -" : "");
 #endif
       if (n_space && ((breaks[break_num].flags & (HNJ_JUST_FLAG_ISHYPHEN |
 						 HNJ_JUST_FLAG_ISSPACE)) ||
@@ -578,28 +495,18 @@ hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
 	space = spacewidth * (1.0 / SCALE);
 
 #ifdef VERBOSE
-      printf ("%% width=%d, n_space = %d\n", width, n_space);
+      fprintf (stderr, "%% width=%d, n_space = %d\n", width, n_space);
 #endif
       pso_begin_line (pso, space);
 
       for (; i < is[break_num]; i++)
 	{
-#ifdef SAVE_KERN
-	  pso_show_word (pso, words[i] + word_offset, save_kern +
-			 word_k[i] + word_offset, z_true);
-#else
 	  pso_show_word (pso, words[i] + word_offset, z_true);
-#endif
 	  word_offset = 0;
 	}
       if (breaks[break_num].flags & HNJ_JUST_FLAG_ISSPACE)
 	{
-#ifdef SAVE_KERN
-	  pso_show_word (pso, words[i] + word_offset, save_kern +
-			 word_k[i] + word_offset, z_false);
-#else
 	  pso_show_word (pso, words[i] + word_offset, z_false);
-#endif
 	  i++;
 	  pso_end_line (pso);
 	  word_offset = 0;
@@ -610,24 +517,13 @@ hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
 	  memcpy (new_word, words[i] + word_offset, j - word_offset);
 	  new_word[j - word_offset] = '-';
 	  new_word[j + 1 - word_offset] = 0;
-#ifdef SAVE_KERN
-	  save_kern[j] = 0;
-	  pso_show_word (pso, new_word, save_kern +
-			 word_k[i] + word_offset, z_true);
-#else
 	  pso_show_word (pso, new_word, z_true);
-#endif
 	  pso_end_line (pso);
 	  word_offset = j;
 	}
       else
 	{
-#ifdef SAVE_KERN
-	  pso_show_word (pso, words[i] + word_offset, save_kern +
-			 word_k[i] + word_offset, z_false);
-#else
 	  pso_show_word (pso, words[i] + word_offset, z_false);
-#endif
 	  pso_end_line (pso);
 	  pso_blank_line (pso);
 	}
