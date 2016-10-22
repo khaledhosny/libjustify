@@ -45,7 +45,6 @@
 #include <hyphen.h>
 #include "hsjust.h"
 #include "hqjust.h"
-#include "hnjalloc.h"
 
 #include "z_misc.h"
 #include "parseAFM.h"
@@ -139,7 +138,7 @@ get_encodings (FontInfo *fi, NameContext *nc, int encoding[256])
   int c;
   unsigned char *rev_encoding;
 
-  rev_encoding = hnj_malloc (fi->numOfChars);
+  rev_encoding = malloc (fi->numOfChars);
   for (i = 0; i < 256; i++)
     encoding[i] = -1;
 
@@ -396,7 +395,7 @@ strdup_from_buf (const char *buf, int size)
 {
   char *new;
 
-  new = hnj_malloc (size + 1);
+  new = malloc (size + 1);
   memcpy (new, buf, size);
   new[size] = '\0';
   return new;
@@ -596,7 +595,7 @@ main (int argc, char **argv)
 	{
 	  hnj (words, word_idx, dict, &params, &pso);
 	  for (i = 0; i < word_idx; i++)
-	    hnj_free (words[i]);
+	    free (words[i]);
 	  word_idx = 0;
 	}
       beg_word = 0;

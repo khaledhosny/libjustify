@@ -9,8 +9,6 @@ lib_LTLIBRARIES = libjustify.la
 libjustify_la_SOURCES = \
 	hsjust.c \
 	hqjust.c \
-	hnjalloc.c \
-	hnjalloc.h \
 	namecontext.c \
 	namecontext.h \
 	parseAFM.c \

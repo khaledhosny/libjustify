@@ -49,7 +49,6 @@
 
 #include <stdlib.h>
 #include <stdio.h> /* for fprintf debugging output */
-#include "hnjalloc.h"
 #include "hqjust.h"
 
 /* Intermediate data structures. */
@@ -254,7 +253,7 @@ hnj_hq_just (const HnjBreak *breaks, int n_breaks,
   int set_width = params->set_width;
   int max_neg_space = params->max_neg_space;
 
-  scratch = hnj_malloc ((n_breaks + 1) * sizeof (Scratch));
+  scratch = malloc ((n_breaks + 1) * sizeof (Scratch));
   s = scratch + 1; /* so that s[-1] is valid */
 
   total_space = 0;
@@ -271,7 +270,7 @@ hnj_hq_just (const HnjBreak *breaks, int n_breaks,
   s[-1].dist = 0;
   s[-1].pred = -1;
 
-  queue = hnj_malloc ((n_breaks * 3 + 1) * sizeof (QueueEntry));
+  queue = malloc ((n_breaks * 3 + 1) * sizeof (QueueEntry));
   q_beg = 0;
   q_end = 1;
   queue[0].dist = 0;
@@ -407,7 +406,7 @@ hnj_hq_just (const HnjBreak *breaks, int n_breaks,
   }
 
 done:
-  hnj_free (scratch);
+  free (scratch);
 
   /* Read out the results (in reverse order) */
   for (n_result = 0; break_idx != -1; break_idx = s[break_idx].pred)
