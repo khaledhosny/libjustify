@@ -36,8 +36,6 @@
 /* A simple program to do PostScript h&j and setting of vanilla
    plaintext files. */
 
-#define VERBOSE
-
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
