@@ -439,7 +439,12 @@ hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
     {
       l = strlen (words[i]);
       if (dict)
-        hnj_hyphen_hyphenate (dict, words[i], l, hbuf);
+        {
+          char **rep = NULL;
+          int *pos = NULL;
+          int *cut = NULL;
+          hnj_hyphen_hyphenate2 (dict, words[i], l, hbuf, NULL, &rep, &pos, &cut);
+        }
       for (j = 0; j < l; j++)
 	{
 	  x += widths[words[i][j]];
