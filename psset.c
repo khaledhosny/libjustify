@@ -111,7 +111,7 @@ struct _PSOContext {
 /* some functions for dealing with defined fonts after evaluation of the
    font program is complete. */
 
-void
+static void
 scale_widths (FontInfo *fi, double fontsize, int widths[256])
 {
   int i;
@@ -131,7 +131,7 @@ scale_widths (FontInfo *fi, double fontsize, int widths[256])
     }
 }
 
-unsigned char *
+static unsigned char *
 get_encodings (FontInfo *fi, NameContext *nc, int encoding[256])
 {
   int i;
@@ -157,7 +157,7 @@ get_encodings (FontInfo *fi, NameContext *nc, int encoding[256])
   return rev_encoding;
 }
 
-void
+static void
 munch_lig_info (PSContext *psc, MunchedFontInfo *mfi, FontInfo *fi)
 {
   int i;
@@ -190,7 +190,7 @@ munch_lig_info (PSContext *psc, MunchedFontInfo *mfi, FontInfo *fi)
     }
 }
 
-MunchedFontInfo *
+static MunchedFontInfo *
 munch_font_info (PSContext *psc, FontInfo *fi, double fontsize)
 {
   MunchedFontInfo *mfi;
@@ -260,7 +260,7 @@ replace_extension (const char *filename, const char *ext)
   return new_fn;
 }
 
-LoadedFont *
+static LoadedFont *
 load_afm (char *filename, double fontsize)
 {
   LoadedFont *loaded_font;
@@ -290,7 +290,7 @@ load_afm (char *filename, double fontsize)
 }
 
 /* get xamt of kern pair */
-int
+static int
 get_kern_pair (MunchedFontInfo *mfi, int glyph1, int glyph2)
 {
   int i, idx;
@@ -307,13 +307,13 @@ get_kern_pair (MunchedFontInfo *mfi, int glyph1, int glyph2)
   return 0;
 }
 
-void
+static void
 pso_begin_page (PSOContext *pso)
 {
   fprintf (pso->f, "%%%%Page: %d %d\n", pso->page_num, pso->page_num);
 }
 
-void
+static void
 pso_end_page (PSOContext *pso)
 {
 #if 0
@@ -327,7 +327,7 @@ pso_end_page (PSOContext *pso)
   pso->page_num++;
 }
 
-void
+static void
 pso_begin_line (PSOContext *pso, double space)
 {
   if (pso->y < pso->bot + 0.34 * pso->fontsize)
@@ -339,14 +339,14 @@ pso_begin_line (PSOContext *pso, double space)
   fprintf (pso->f, "%g %g *", pso->y, space);
 }
 
-void
+static void
 pso_end_line (PSOContext *pso)
 {
   pso->y -= pso->linespace;
   fprintf (pso->f, "\n");
 }
 
-void
+static void
 pso_blank_line (PSOContext *pso)
 {
   pso->y -= pso->linespace;
@@ -354,7 +354,7 @@ pso_blank_line (PSOContext *pso)
 }
 
 /* This includes kerning! */
-void
+static void
 pso_show_word (PSOContext *pso, const char *word, z_boolean space)
 {
   char new_word[256];
@@ -384,13 +384,13 @@ pso_show_word (PSOContext *pso, const char *word, z_boolean space)
   fputs (new_word, pso->f);
 }
 
-void
+static void
 pso_hmoveto (PSOContext *pso, double dx)
 {
   fprintf (pso->f, " %g 0 rmoveto", dx);
 }
 
-char *
+static char *
 strdup_from_buf (const char *buf, int size)
 {
   char *new;
@@ -401,7 +401,7 @@ strdup_from_buf (const char *buf, int size)
   return new;
 }
 
-void
+static void
 hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
      PSOContext *pso)
 {
