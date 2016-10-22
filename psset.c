@@ -71,28 +71,6 @@ struct _PSOContext {
   int page_num;
 };
 
-/* allocate a new filename, same as the old one, but with the extension */
-static char *
-replace_extension (const char *filename, const char *ext)
-{
-  int i;
-  int size_fn, size_ext;
-  char *new_fn;
-
-  size_fn = strlen (filename);
-  size_ext = strlen (ext);
-  for (i = size_fn - 1; i >= 0; i--)
-    if (filename[i] == '.' || filename[i] == '/')
-      break;
-  if (filename[i] != '.')
-    i = size_fn;
-  new_fn = z_new (char, i + size_ext + 1);
-  memcpy (new_fn, filename, i);
-  memcpy (new_fn + i, ext, size_ext);
-  new_fn[i + size_ext] = '\0';
-  return new_fn;
-}
-
 /* get xamt of kern pair */
 static int
 get_kern_pair (PSOContext *pso, int c1, int c2)
