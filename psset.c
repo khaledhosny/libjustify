@@ -39,14 +39,13 @@
 #define VERBOSE
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
 #include <hyphen.h>
 #include "hsjust.h"
 #include "hqjust.h"
-
-#include "z_misc.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -156,7 +155,7 @@ pso_blank_line (PSOContext *pso)
 
 /* This includes kerning! */
 static void
-pso_show_word (PSOContext *pso, const char *word, z_boolean space)
+pso_show_word (PSOContext *pso, const char *word, bool space)
 {
   char new_word[256];
   int i, j;
@@ -300,12 +299,12 @@ hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
 
       for (; i < is[break_num]; i++)
 	{
-	  pso_show_word (pso, words[i] + word_offset, z_true);
+	  pso_show_word (pso, words[i] + word_offset, true);
 	  word_offset = 0;
 	}
       if (breaks[break_num].flags & HNJ_JUST_FLAG_ISSPACE)
 	{
-	  pso_show_word (pso, words[i] + word_offset, z_false);
+	  pso_show_word (pso, words[i] + word_offset, false);
 	  i++;
 	  pso_end_line (pso);
 	  word_offset = 0;
@@ -316,13 +315,13 @@ hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
 	  memcpy (new_word, words[i] + word_offset, j - word_offset);
 	  new_word[j - word_offset] = '-';
 	  new_word[j + 1 - word_offset] = 0;
-	  pso_show_word (pso, new_word, z_true);
+	  pso_show_word (pso, new_word, true);
 	  pso_end_line (pso);
 	  word_offset = j;
 	}
       else
 	{
-	  pso_show_word (pso, words[i] + word_offset, z_false);
+	  pso_show_word (pso, words[i] + word_offset, false);
 	  pso_end_line (pso);
 	  pso_blank_line (pso);
 	}

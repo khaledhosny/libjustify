@@ -6,8 +6,7 @@ lib_LTLIBRARIES = libjustify.la
 
 libjustify_la_SOURCES = \
 	hsjust.c \
-	hqjust.c \
-	z_misc.h
+	hqjust.c
 
 libjustifyincdir = $(includedir)/libjustify
 libjustifyinc_HEADERS = \
