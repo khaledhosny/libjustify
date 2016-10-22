@@ -47,54 +47,19 @@
 #include "hqjust.h"
 
 #include "z_misc.h"
-#include "parseAFM.h"
-#include "namecontext.h"
 
-typedef struct _PSContext PSContext;
-typedef struct _LoadedFont LoadedFont;
-typedef struct _MunchedFontInfo MunchedFontInfo;
-typedef struct _KernPair KernPair;
-typedef struct _LigList LigList;
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_ADVANCES_H
 
 typedef struct _PSOContext PSOContext;
 
 #define SCALE 50
 
-struct _PSContext {
-  NameContext *nc; /* the context for all names */
-};
-
-struct _LoadedFont {
-  PSContext *psc;
-  FontInfo *fi;
-  MunchedFontInfo *mfi;
-};
-
-struct _LigList {
-  LigList *next;
-  unsigned char succ, lig;
-};
-
-/* The kern pair table is actually a hash table */
-struct _MunchedFontInfo {
-  int kern_pair_table_size;
-  KernPair *kern_pair_table;
-  int widths[256];
-  int encoding[256];
-  LigList *lig[256];
-  unsigned char *rev_encoding;
-};
-
-struct _KernPair {
-  NameId name1; /* or -1 if empty */
-  NameId name2;
-  int xamt; /* , yamt */
-};
-
 /* PostScript output context */
 struct _PSOContext {
   FILE *f;
-  LoadedFont *font;
+  FT_Face face;
   double fontsize;
   double linespace;
   double left;
@@ -105,138 +70,6 @@ struct _PSOContext {
   double y;
   int page_num;
 };
-
-#define kern_pair_hash(n1,n2) ((n1) * 367 + (n2))
-
-/* some functions for dealing with defined fonts after evaluation of the
-   font program is complete. */
-
-static void
-scale_widths (FontInfo *fi, double fontsize, int widths[256])
-{
-  int i;
-  double scale;
-  int c;
-
-  scale = fontsize * 0.001 * SCALE;
-
-  for (i = 0; i < 256; i++)
-    widths[i] = 0;
-
-  for (i = 0; i < fi->numOfChars; i++)
-    {
-      c = fi->cmi[i].code;
-      if (c >= 0 && c < 256)
-	widths[c] = floor (fi->cmi[i].wx * scale + 0.5);
-    }
-}
-
-static unsigned char *
-get_encodings (FontInfo *fi, NameContext *nc, int encoding[256])
-{
-  int i;
-  int c;
-  unsigned char *rev_encoding;
-
-  rev_encoding = malloc (fi->numOfChars);
-  for (i = 0; i < 256; i++)
-    encoding[i] = -1;
-
-  for (i = 0; i < fi->numOfChars; i++)
-    rev_encoding[i] = 0;
-
-  for (i = 0; i < fi->numOfChars; i++)
-    {
-      c = fi->cmi[i].code;
-      if (c >= 0 && c < 256)
-	{
-	  encoding[c] = name_context_intern (nc, fi->cmi[i].name);
-	  rev_encoding[encoding[c]] = c;
-	}
-    }
-  return rev_encoding;
-}
-
-static void
-munch_lig_info (PSContext *psc, MunchedFontInfo *mfi, FontInfo *fi)
-{
-  int i;
-  int c;
-  int succ;
-  int lig;
-  LigList *ll;
-  Ligature *ligs;
-
-  for (i = 0; i < 256; i++)
-    mfi->lig[i] = NULL;
-
-  for (i = 0; i < fi->numOfChars; i++)
-    {
-      for (ligs = fi->cmi[i].ligs; ligs; ligs = ligs->next)
-	{
-	  c = fi->cmi[i].code;
-	  succ = mfi->rev_encoding[name_context_intern (psc->nc, ligs->succ)];
-	  lig = mfi->rev_encoding[name_context_intern (psc->nc, ligs->lig)];
-	  /* predicate says all three characters are encoded in 8 bits */
-	  if (!((c | succ | lig) & ~255))
-	    {
-	      ll = z_new (LigList, 1);
-	      ll->succ = succ;
-	      ll->lig = lig;
-	      ll->next = mfi->lig[c];
-	      mfi->lig[c] = ll;
-	    }
-	}
-    }
-}
-
-static MunchedFontInfo *
-munch_font_info (PSContext *psc, FontInfo *fi, double fontsize)
-{
-  MunchedFontInfo *mfi;
-  KernPair *table;
-  int table_size;
-  int i, j;
-  NameId name1, name2;
-  double scale;
-  int c1, c2;
-
-  scale = fontsize * 0.001 * SCALE;
-
-  mfi = z_new (MunchedFontInfo, 1);
-
-  scale_widths (fi, fontsize, mfi->widths);
-
-  mfi->rev_encoding = get_encodings (fi, psc->nc, mfi->encoding);
-
-  munch_lig_info (psc, mfi, fi);
-
-  table_size = fi->numOfPairs << 1;
-  mfi->kern_pair_table_size = table_size;
-  table = z_new (KernPair, table_size);
-  mfi->kern_pair_table = table;
-  for (i = 0; i < mfi->kern_pair_table_size; i++)
-    table[i].name1 = -1;
-
-  /* Transfer afm kern pair information into the hash table,
-     taking care to intern the names as we go. */
-  for (i = 0; i < fi->numOfPairs; i++)
-    {
-      name1 = name_context_intern (psc->nc, fi->pkd[i].name1);
-      name2 = name_context_intern (psc->nc, fi->pkd[i].name2);
-      c1 = mfi->rev_encoding[name1];
-      c2 = mfi->rev_encoding[name2];
-      for (j = kern_pair_hash (c1, c2);
-	   table[j % table_size].name1 != -1;
-	   j++);
-      j = j % table_size;
-      table[j].name1 = c1;
-      table[j].name2 = c2;
-      table[j].xamt = floor (fi->pkd[i].xamt * scale + 0.5);
-    }
-
-  return mfi;
-}
 
 /* allocate a new filename, same as the old one, but with the extension */
 static char *
@@ -260,51 +93,41 @@ replace_extension (const char *filename, const char *ext)
   return new_fn;
 }
 
-static LoadedFont *
-load_afm (char *filename, double fontsize)
-{
-  LoadedFont *loaded_font;
-  FILE *afm_f;
-  int status;
-
-  PSContext *psc;
-
-  psc = z_new (PSContext, 1);
-  psc->nc = name_context_new ();
-
-  loaded_font = z_new (LoadedFont, 1);
-  loaded_font->psc = psc;
-
-  loaded_font->fi = NULL;
-  loaded_font->mfi = NULL;
-  afm_f = fopen (filename, "rb");
-  if (afm_f != NULL)
-    {
-      status = parseFile (afm_f, &loaded_font->fi, P_ALL);
-      fclose (afm_f);
-
-      loaded_font->mfi = munch_font_info (psc, loaded_font->fi, fontsize);
-    }
-
-  return loaded_font;
-}
-
 /* get xamt of kern pair */
 static int
-get_kern_pair (MunchedFontInfo *mfi, int glyph1, int glyph2)
+get_kern_pair (PSOContext *pso, int c1, int c2)
 {
-  int i, idx;
-  KernPair *table;
-  int table_size;
+  unsigned int glyph1, glyph2;
+  FT_Vector kern;
+  double scale;
 
-  table_size = mfi->kern_pair_table_size;
-  table = mfi->kern_pair_table;
-  for (i = kern_pair_hash (glyph1, glyph2); idx = i % table_size,
-	 table[idx].name1 != -1;
-       i++)
-    if (table[idx].name1 == glyph1 && table[idx].name2 == glyph2)
-      return table[idx].xamt;
+  scale = pso->fontsize * 0.001 * SCALE;
+
+  glyph1 = FT_Get_Char_Index (pso->face, c1);
+  glyph2 = FT_Get_Char_Index (pso->face, c2);
+  if (FT_Get_Kerning (pso->face, glyph1, glyph2, FT_KERNING_UNSCALED, &kern))
+    return 0;
+  if (kern.x)
+    return floor (kern.x * scale + 0.5);
+
   return 0;
+}
+
+static int
+get_width (PSOContext *pso, int c)
+{
+  unsigned int glyph;
+  FT_Fixed advance;
+  double scale;
+
+  scale = pso->fontsize * 0.001 * SCALE;
+
+  glyph = FT_Get_Char_Index (pso->face, c);
+  if (FT_Get_Advance (pso->face, glyph, FT_LOAD_NO_SCALE, &advance))
+    return 0;
+
+  return floor (advance * scale + 0.5);
+
 }
 
 static void
@@ -360,10 +183,8 @@ pso_show_word (PSOContext *pso, const char *word, z_boolean space)
   char new_word[256];
   int i, j;
   char c;
-  MunchedFontInfo *mfi;
   int kern;
 
-  mfi = pso->font->mfi;
   j = 0;
   new_word[j++] = '(';
   for (i = 0; word[i]; i++)
@@ -372,7 +193,7 @@ pso_show_word (PSOContext *pso, const char *word, z_boolean space)
       if (c == '(' || c == ')' || c == '\\')
 	new_word[j++] = '\\';
       new_word[j++] = c;
-      kern = get_kern_pair (mfi, c, word[i + 1]);
+      kern = get_kern_pair (pso, c, word[i + 1]);
       if (kern)
 	  j += sprintf (new_word + j, ")%d %c(",
 			kern > 0 ? kern : -kern,
@@ -419,17 +240,13 @@ hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
   int hyphwidth;
   int spacewidth;
   char new_word[256];
-  int *widths;
   int word_offset;
   int n_space;
   int width;
   double space;
-  MunchedFontInfo *mfi;
 
-  mfi = pso->font->mfi;
-  widths = mfi->widths;
-  hyphwidth = widths['-'];
-  spacewidth = widths[' '];
+  hyphwidth = get_width (pso, '-');
+  spacewidth = get_width (pso, ' ');
 
   n_breaks = 0;
   x = 0;
@@ -446,7 +263,7 @@ hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
         }
       for (j = 0; j < l; j++)
 	{
-	  x += widths[words[i][j]];
+	  x += get_width (pso, words[i][j]);
 	  if (dict && hbuf[j] & 1)
 	    {
 	      breaks[n_breaks].x0 = x + hyphwidth;
@@ -459,7 +276,7 @@ hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
 	    }
 	  if (words[i][j + 1])
 	    {
-	      x += get_kern_pair (mfi, words[i][j], words[i][j + 1]);
+	      x += get_kern_pair (pso, words[i][j], words[i][j + 1]);
 	    }
 	}
       breaks[n_breaks].x0 = x;
@@ -539,8 +356,9 @@ int
 main (int argc, char **argv)
 {
 #if 1
+  char *font_fn = "NimbusRoman-Regular.t1";
   char *font_name = "Times-Roman";
-  char *afm_fn = "ptmr8a.afm";
+  char *afm_fn = "NimbusRoman-Regular.afm";
 #else
   char *font_name = "Helvetica";
   char *afm_fn = "phvr8a.afm";
@@ -565,7 +383,15 @@ main (int argc, char **argv)
   pso.bot = 72;
   pso.y = floor (pso.top - .66 * pso.fontsize);
 
-  pso.font = load_afm (afm_fn, pso.fontsize);
+  FT_Library library;
+  if (FT_Init_FreeType (&library))
+    return 1;
+  if (FT_New_Face (library, font_fn, 0, &pso.face))
+    return 1;
+  if (FT_Set_Char_Size (pso.face, pso.fontsize * SCALE, 0, 0, 0))
+    return 1;
+  if (FT_Attach_File (pso.face, afm_fn))
+    return 1;
 
   pso.page_num = 1;
 
@@ -618,5 +444,8 @@ main (int argc, char **argv)
 
   pso_end_page (&pso);
   fprintf (pso.f, "%%%%EOF\n");
+
+  FT_Done_Face (pso.face);
+  
   return 0;
 }

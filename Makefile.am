@@ -9,10 +9,6 @@ lib_LTLIBRARIES = libjustify.la
 libjustify_la_SOURCES = \
 	hsjust.c \
 	hqjust.c \
-	namecontext.c \
-	namecontext.h \
-	parseAFM.c \
-	parseAFM.h \
 	z_misc.h
 
 libjustifyincdir = $(includedir)/libjustify
@@ -27,11 +23,14 @@ DEPS = $(top_builddir)/libjustify.la
 LDADDS = $(top_builddir)/libjustify.la
 
 psset_SOURCES=psset.c
-psset_LDFLAGS = 
+psset_LDFLAGS =
+psset_CFLAGS = \
+	     $(FREETYPE_CFLAGS)
 psset_DEPENDENCIES = $(DEPS)
 psset_LDADD= $(LDADDS) \
 	     -lm \
-	     -lhyphen
+	     -lhyphen \
+	     $(FREETYPE_LIBS)
 
 tests: psset
 

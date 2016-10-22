@@ -29,8 +29,11 @@ AC_CONFIG_MACRO_DIRS([m4])
 AC_PROG_CC
 AC_PROG_CPP
 AM_PROG_LIBTOOL
+PKG_PROG_PKG_CONFIG([0.20])
 
 AC_CHECK_HEADER(hyphen.h, [], [ AC_MSG_ERROR(libhyphen headers not found.)], [])
+
+PKG_CHECK_MODULES(FREETYPE, [freetype2])
 
 AC_OUTPUT([Makefile
 libjustify-config])
