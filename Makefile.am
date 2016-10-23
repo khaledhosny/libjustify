@@ -22,12 +22,14 @@ LDADDS = $(top_builddir)/libjustify.la
 psset_SOURCES=psset.c
 psset_LDFLAGS =
 psset_CFLAGS = \
-	     $(FREETYPE_CFLAGS)
+	     $(FREETYPE_CFLAGS) \
+	     $(CAIRO_CFLAGS)
 psset_DEPENDENCIES = $(DEPS)
 psset_LDADD= $(LDADDS) \
 	     -lm \
 	     -lhyphen \
-	     $(FREETYPE_LIBS)
+	     $(FREETYPE_LIBS) \
+	     $(CAIRO_LIBS)
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libjustify.pc

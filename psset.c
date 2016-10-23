@@ -49,13 +49,18 @@
 #include FT_FREETYPE_H
 #include FT_ADVANCES_H
 
+#include <cairo.h>
+#include <cairo-ft.h>
+#include <cairo-ps.h>
+
 typedef struct _PSOContext PSOContext;
 
 #define SCALE 50
 
 /* PostScript output context */
 struct _PSOContext {
-  FILE *f;
+  cairo_t *cr;
+  cairo_surface_t *ps;
   FT_Face face;
   double fontsize;
   double linespace;
@@ -65,7 +70,7 @@ struct _PSOContext {
   double bot;
 
   double y;
-  int page_num;
+  double space;
 };
 
 /* get xamt of kern pair */
@@ -108,82 +113,58 @@ get_width (PSOContext *pso, int c)
 static void
 pso_begin_page (PSOContext *pso)
 {
-  fprintf (pso->f, "%%%%Page: %d %d\n", pso->page_num, pso->page_num);
 }
 
 static void
 pso_end_page (PSOContext *pso)
 {
-#if 0
-  fprintf (pso->f, "0.25 setlinewidth\n");
-  fprintf (pso->f, "%g %g moveto %g %g lineto stroke\n",
-	   pso->left, pso->top, pso->left, pso->bot);
-  fprintf (pso->f, "%g %g moveto %g %g lineto stroke\n",
-	   pso->right, pso->top, pso->right, pso->bot);
-#endif
-  fprintf (pso->f, "showpage\n");
-  pso->page_num++;
+  cairo_surface_show_page (pso->ps);
 }
 
 static void
 pso_begin_line (PSOContext *pso, double space)
 {
-  if (pso->y < pso->bot + 0.34 * pso->fontsize)
+  if (pso->y > pso->bot + 0.34 * pso->fontsize)
     {
       pso_end_page (pso);
-      pso->y = floor (pso->top - .66 * pso->fontsize);
+      pso->y = floor (pso->top + .66 * pso->fontsize);
       pso_begin_page (pso);
     }
-  fprintf (pso->f, "%g %g *", pso->y, space);
+  cairo_move_to (pso->cr, pso->left, pso->y);
+  pso->space = space;
 }
 
 static void
 pso_end_line (PSOContext *pso)
 {
-  pso->y -= pso->linespace;
-  fprintf (pso->f, "\n");
+  pso->y += pso->linespace;
 }
 
 static void
 pso_blank_line (PSOContext *pso)
 {
-  pso->y -= pso->linespace;
-  fprintf (pso->f, "\n");
+  pso->y += pso->linespace;
 }
 
 /* This includes kerning! */
 static void
 pso_show_word (PSOContext *pso, const char *word, bool space)
 {
-  char new_word[256];
-  int i, j;
-  char c;
+  char ch[2] = { '\0' };
+  int i;
   int kern;
 
-  j = 0;
-  new_word[j++] = '(';
   for (i = 0; word[i]; i++)
     {
-      c = word[i];
-      if (c == '(' || c == ')' || c == '\\')
-	new_word[j++] = '\\';
-      new_word[j++] = c;
-      kern = get_kern_pair (pso, c, word[i + 1]);
+      ch[0] = word[i];
+      cairo_show_text (pso->cr, ch);
+      kern = get_kern_pair (pso, word[i], word[i + 1]);
       if (kern)
-	  j += sprintf (new_word + j, ")%d %c(",
-			kern > 0 ? kern : -kern,
-			kern > 0 ? '+' : '-');
+        cairo_rel_move_to (pso->cr, kern * (1.0 / SCALE), 0);
     }
-  new_word[j++] = ')';
-  new_word[j++] = space ? '_' : '|';
-  new_word[j++] = 0;
-  fputs (new_word, pso->f);
-}
 
-static void
-pso_hmoveto (PSOContext *pso, double dx)
-{
-  fprintf (pso->f, " %g 0 rmoveto", dx);
+  if (space)
+    cairo_rel_move_to (pso->cr, pso->space, 0);
 }
 
 static char *
@@ -327,17 +308,24 @@ hnj (char **words, int n_words, HyphenDict *dict, HnjParams *params,
    }
 }
 
+static cairo_status_t
+write_from_cairo (void *closure, const unsigned char *data, unsigned int length)
+{
+  FILE *file = (FILE *) closure;
+  size_t written = fwrite (data, sizeof(char), length, file);
+  if (written == length)
+    return CAIRO_STATUS_SUCCESS;
+  else
+    return CAIRO_STATUS_WRITE_ERROR;
+}
+
 int
 main (int argc, char **argv)
 {
-#if 1
   char *font_fn = "NimbusRoman-Regular.t1";
-  char *font_name = "Times-Roman";
   char *afm_fn = "NimbusRoman-Regular.afm";
-#else
-  char *font_name = "Helvetica";
-  char *afm_fn = "phvr8a.afm";
-#endif
+
+  FT_Library library;
   PSOContext pso;
 
   HyphenDict *dict;
@@ -348,17 +336,15 @@ main (int argc, char **argv)
   int beg_word;
   int word_idx;
 
-  pso.f = stdout;
   pso.fontsize = 12;
   pso.linespace = 14;
   pso.left = 72;
   pso.right = 540;
   pso.right = 72 + 216;
-  pso.top = 720;
-  pso.bot = 72;
-  pso.y = floor (pso.top - .66 * pso.fontsize);
+  pso.top = 72;
+  pso.bot = 720;
+  pso.y = floor (pso.top + .66 * pso.fontsize);
 
-  FT_Library library;
   if (FT_Init_FreeType (&library))
     return 1;
   if (FT_New_Face (library, font_fn, 0, &pso.face))
@@ -368,26 +354,19 @@ main (int argc, char **argv)
   if (FT_Attach_File (pso.face, afm_fn))
     return 1;
 
-  pso.page_num = 1;
-
-  fprintf (pso.f, "%%!PS-Adobe-3.0\n");
-  fprintf (pso.f, "%% Here's my prolog\n"
-	   "/| {show} bind def\n"
-	   "/* {/sa exch def %g exch moveto} bind def\n"
-	   "/_ {show sa 0 rmoveto} bind def\n"
-	   "/+ {exch show %g mul 0 rmoveto} bind def\n"
-	   "/- {exch show -%g mul 0 rmoveto} bind def\n"
-	   "\n", pso.left, 1.0 / SCALE, 1.0 / SCALE);
-
-  fprintf (pso.f, "/%s findfont %g scalefont setfont\n"
-	   "\n",
-	   font_name, pso.fontsize);
+  pso.ps = cairo_ps_surface_create_for_stream (write_from_cairo, stdout, 595, 842);
+  pso.cr = cairo_create (pso.ps);
 
   params.set_width = floor ((pso.right - pso.left) * SCALE + 0.5);
   params.max_neg_space = 128;
   dict = hnj_hyphen_load ("hyphen.mashed");
 
+  cairo_font_face_t *cr_face = cairo_ft_font_face_create_for_ft_face (pso.face, 0);
+  cairo_set_font_face (pso.cr, cr_face);
+  cairo_set_font_size (pso.cr, pso.fontsize);
+
   pso_begin_page (&pso);
+
   word_idx = 0;
   /* Parse a paragraph into the words data structures. */
   while (fgets (buf, sizeof(buf), stdin))
@@ -418,9 +397,12 @@ main (int argc, char **argv)
     hnj (words, word_idx, dict, &params, &pso);
 
   pso_end_page (&pso);
-  fprintf (pso.f, "%%%%EOF\n");
+
+  cairo_destroy (pso.cr);
+  cairo_surface_finish (pso.ps);
+  cairo_surface_destroy (pso.ps);
 
   FT_Done_Face (pso.face);
-  
+
   return 0;
 }

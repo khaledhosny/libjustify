@@ -34,5 +34,6 @@ PKG_PROG_PKG_CONFIG([0.20])
 AC_CHECK_HEADER(hyphen.h, [], [ AC_MSG_ERROR(libhyphen headers not found.)], [])
 
 PKG_CHECK_MODULES(FREETYPE, [freetype2])
+PKG_CHECK_MODULES(CAIRO, [cairo])
 
 AC_OUTPUT([Makefile])
