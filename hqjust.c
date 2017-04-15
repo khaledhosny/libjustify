@@ -47,6 +47,7 @@
    the variation from the ideal set width.
  */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h> /* for fprintf debugging output */
 #include "hqjust.h"
@@ -361,6 +362,8 @@ hnj_hq_just (const HnjBreak *breaks, int n_breaks,
 	  q_beg++;
 	}
       break;
+    default:
+      assert(0); /* shouldn't reach here */
     }
   }
 
