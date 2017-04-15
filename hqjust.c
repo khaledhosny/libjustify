@@ -88,29 +88,6 @@ struct _QueueEntry {
   QueueType type;
 };
 
-/* Given indices to two breaks, calculate the penalty for the line
-   between the two breaks. If b1_index is -1, then calculate the
-   penalty for the first line of the paragraph (i.e. assume that
-   b2_index is the first break in the paragraph).
-   */
-static int
-calc_penalty (HnjBreak *breaks, HnjParams *params,
-	      int b1_index, int b2_index)
-{
-  int line_length;
-  int penalty;
-  int deviation; /* deviation from ideal set width */
-
-  if (b1_index == -1)
-    line_length = breaks[b2_index].x0;
-  else
-    line_length = breaks[b2_index].x0 - breaks[b1_index].x1;
-
-  deviation = params->set_width - line_length;
-  penalty = deviation * deviation + breaks[b2_index].penalty;
-  return penalty;
-}
-
 /* Find the point at which deviation stops decreasing and starts
    increasing. For the returned break, the line is just too short,
    and for the next break, just too long. */
@@ -173,16 +150,6 @@ queue_insert_dist (QueueEntry *queue, int dist, int q_beg, int q_end)
       break;
   queue_insert (queue, ins_pt, q_end);
   return ins_pt;
-}
-
-/* Delete del_pt, q_end decrements */
-static void
-queue_delete (QueueEntry *queue, int del_pt, int q_end)
-{
-  int i;
-
-  for (i = del_pt; i < q_end - 1; i++)
-    queue[i] = queue[i + 1];
 }
 
 /* Change the dist on queue[pos] to dist, maintaining the queue invariant. */
@@ -286,11 +253,7 @@ hnj_hq_just (const HnjBreak *breaks, int n_breaks,
       if (break_idx == n_breaks - 1)
 	/* Reached the end! */
 	goto done;
-#if 1
       q_beg++;
-#else
-      q_delete (queue, q_beg, q_end--);
-#endif
       if (break_idx == -1)
 	x_prev = 0;
       else
@@ -395,11 +358,7 @@ hnj_hq_just (const HnjBreak *breaks, int n_breaks,
 	}
       else
 	{
-#if 1
 	  q_beg++;
-#else
-	  queue_delete (queue, q_beg, q_end--);
-#endif
 	}
       break;
     }
